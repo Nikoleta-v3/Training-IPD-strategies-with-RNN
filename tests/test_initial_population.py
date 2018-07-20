@@ -1,9 +1,14 @@
 import sequence_sensei as ss
+import random
 
 def test_initial_population():
     size_of_population = 20
-    initial_population = ss.get_initial_population(size_of_population)
+    sequence_length = 20
+    initial_population = ss.get_initial_population(size_of_population, sequence_length=sequence_length)
 
     assert len(initial_population) == 40
-    assert initial_population[-1] == [0 for _ in range(200)]
-    assert initial_population[-2] == [1 for _ in range(200)]
+
+    individual = random.randint(0, 20)
+    assert len(initial_population[individual]) == sequence_length
+    assert initial_population[-1] == [0 for _ in range(20)]
+    assert initial_population[-2] == [1 for _ in range(20)]
