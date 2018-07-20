@@ -26,9 +26,9 @@ def get_fitness_of_individual(sequence, opponent, seed, index=0, turns=205):
 def get_fitness_of_population(population, opponent, seed, index, num_process=1):
     index_scores = []
     for index, individual in enumerate(population):
-        index_scores.append(ss.get_fitness_of_individual(sequence, opponent, seed=seed,
-                                                         index=index))
+        index_scores.append(get_fitness_of_individual(individual, opponent, seed=seed,
+                                                      index=index))
 
     with dask.config.set(pool=ThreadPool(num_process)):
         result = dask.compute(*index_scores)
-    return result
+    return list(result)

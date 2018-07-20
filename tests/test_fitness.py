@@ -29,4 +29,31 @@ def test_get_fitness_of_individual():
     assert score_vs_d == 0
 
 def test_get_fitness_of_population():
-    
+    population = ss.get_initial_population(5)
+    scores = ss.get_fitness_of_population(population, axl.TitForTat, 0, 0)
+
+    assert scores == [(0, 1.0439024390243903),
+                      (1, 2.9902439024390244),
+                      (2, 1.5414634146341464),
+                      (3, 2.4878048780487805),
+                      (4, 2.029268292682927),
+                      (5, 2.0),
+                      (6, 2.5170731707317073),
+                      (7, 1.5121951219512195),
+                      (8, 3.0),
+                      (9, 1.0195121951219512)]
+
+def test_get_fitness_of_population_with_random_opponent():
+    population = ss.get_initial_population(5)
+    scores = ss.get_fitness_of_population(population, axl.Random, 0, 0)
+
+    assert scores == [(0, 2.8780487804878048),
+                      (1, 1.4341463414634146),
+                      (2, 2.502439024390244),
+                      (3, 1.8097560975609757),
+                      (4, 2.180487804878049),
+                      (5, 2.131707317073171),
+                      (6, 1.8048780487804879),
+                      (7, 2.5073170731707317),
+                      (8, 1.4195121951219511),
+                      (9, 2.892682926829268)]
