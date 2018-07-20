@@ -1,0 +1,6 @@
+.pytest_cache/
+src/sequence_sensei/__pycache__/
+tests/__pycache__/
+
+.vscode/
+src/sequence_sensei.egg-info/
