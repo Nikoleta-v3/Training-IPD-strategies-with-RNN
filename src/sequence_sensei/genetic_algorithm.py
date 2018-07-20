@@ -1,3 +1,6 @@
+"""
+A file which contains code to perform a genetic algorithm on binary sequences.
+"""
 import random
 
 def crossover(sequence_one, sequence_two):

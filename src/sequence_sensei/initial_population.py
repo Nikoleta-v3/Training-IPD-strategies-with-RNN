@@ -1,3 +1,6 @@
+"""
+A file that contains code to create an initial population of binary sequences.
+"""
 import numpy as np
 
 def get_initial_population(size_of_population, sequence_length=200):

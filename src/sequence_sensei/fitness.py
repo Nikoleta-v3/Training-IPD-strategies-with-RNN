@@ -1,3 +1,7 @@
+"""
+A file which contains code to return the score of binary sequences against an opponent
+after playing an IPD match.
+"""
 import axelrod as axl
 import numpy as np
 import dask
@@ -10,12 +14,12 @@ def get_sequence_str(sequence):
         string_sequence += str(action)
 
     return string_sequence
-    
+
 @dask.delayed
 def get_fitness_of_individual(sequence, opponent, seed, index=0, turns=205):
     if seed is not np.NaN:
         axl.seed(seed)
-    
+
     opponent = opponent()
     player = axl.Cycler(get_sequence_str(sequence))
     match = axl.Match([opponent, player], turns=turns)
