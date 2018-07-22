@@ -30,7 +30,7 @@ def test_get_fitness_of_individual():
 
 def test_get_fitness_of_population():
     population = ss.get_initial_population(5)
-    scores = ss.get_fitness_of_population(population, axl.TitForTat, 0, 0)
+    scores = ss.get_fitness_of_population(population, axl.TitForTat, 0)
 
     assert scores == [(0, 1.0439024390243903),
                       (1, 2.9902439024390244),
@@ -45,7 +45,7 @@ def test_get_fitness_of_population():
 
 def test_get_fitness_of_population_with_random_opponent():
     population = ss.get_initial_population(5)
-    scores = ss.get_fitness_of_population(population, axl.Random, 0, 0)
+    scores = ss.get_fitness_of_population(population, axl.Random, 0)
 
     assert scores == [(0, 2.8780487804878048),
                       (1, 1.4341463414634146),

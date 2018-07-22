@@ -27,7 +27,7 @@ def get_fitness_of_individual(sequence, opponent, seed, index=0, turns=205):
 
     return index, match.final_score_per_turn()[-1]
 
-def get_fitness_of_population(population, opponent, seed, index, num_process=1):
+def get_fitness_of_population(population, opponent, seed, num_process=1):
     index_scores = []
     for index, individual in enumerate(population):
         index_scores.append(get_fitness_of_individual(individual, opponent, seed=seed,
