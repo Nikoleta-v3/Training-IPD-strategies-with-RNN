@@ -17,3 +17,6 @@ def test_mutation():
     axl.seed(1)
     mutated_sequence = [ss.mutation(gene, mutation_probability) for gene in sequence]
     assert mutated_sequence == [0] + sequence[1:3] + [1] + sequence[4:]
+
+def test_evolve():
+    pass
