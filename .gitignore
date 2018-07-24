@@ -4,3 +4,7 @@ tests/__pycache__/
 
 .vscode/
 src/sequence_sensei.egg-info/
+
+.ipynb_checkpoints/
+raw_data/
+
