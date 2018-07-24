@@ -59,7 +59,7 @@ def evolve(opponent, number_of_generations, bottleneck, mutation_probability,
             population = new_population
 
             while len(population) < 2 * size_of_population:
-                i, j  = [random.randint(0, bottleneck) for _ in range(2)]
+                i, j  = [random.randint(0, bottleneck - 1) for _ in range(2)]
                 new_individual = crossover(population[i], population[j])
                 new_individual = [mutation(gene, mutation_probability) for gene in new_individual]
                 population.append(new_individual)
