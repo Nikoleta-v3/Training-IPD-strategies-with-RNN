@@ -1,6 +1,12 @@
-import sequence_sensei as ss
-import axelrod as axl
 import random
+import shutil
+
+import numpy as np
+import pandas as pd
+
+import axelrod as axl
+import sequence_sensei as ss
+
 
 def test_crossover():
     sequence_one = [random.randint(0, 2) for _ in range(10)]
@@ -19,4 +25,29 @@ def test_mutation():
     assert mutated_sequence == [0] + sequence[1:3] + [1] + sequence[4:]
 
 def test_evolve():
-    pass
+    player = axl.Cooperator
+    number_of_generations = 5
+    bottleneck = 10
+    mutation_probability = 0.1
+    sequence_length = 10
+    size_of_population = 10
+    seed = np.NaN
+
+    score, best_sequence = ss.evolve(opponent=player,
+                                     number_of_generations=number_of_generations,
+                                     bottleneck=bottleneck,
+                                     mutation_probability=mutation_probability,
+                                     sequence_length=sequence_length,
+                                     size_of_population=size_of_population,
+                                     seed=seed)
+
+    result = pd.read_csv('raw_data/Cooperator_nan/main.csv')
+    assert list(result.columns) == ['generation', 'index', 'score', 'gene_0',
+                                    'gene_1', 'gene_2', 'gene_3', 'gene_4',
+                                    'gene_5', 'gene_6', 'gene_7', 'gene_8',
+                                    'gene_9']
+    assert list(result['generation'].unique()) == [0, 1, 2, 3, 4, 5]
+    assert score == 5.0
+    assert best_sequence == [0 for _ in range(sequence_length)]
+
+    shutil.rmtree('raw_data/Cooperator_nan')

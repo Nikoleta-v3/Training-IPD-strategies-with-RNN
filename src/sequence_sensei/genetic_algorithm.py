@@ -4,7 +4,11 @@ A file which contains code to perform a genetic algorithm on binary sequences.
 import csv
 import os
 import random
+
+import tqdm
+
 import sequence_sensei as ss
+
 
 def crossover(sequence_one, sequence_two):
     sequence_length = len(sequence_one)
@@ -29,29 +33,30 @@ def evolve(opponent, number_of_generations, bottleneck, mutation_probability,
     headers = ['generation', 'index', 'score']
     headers += ['gene_{}'.format(i) for i in range(sequence_length)]
 
-    print('|Initialising population|')
     generation = 0
     population = ss.get_initial_population(size_of_population=size_of_population,
                                            sequence_length=sequence_length)
     scores = ss.get_fitness_of_population(population=population, opponent=opponent,
-                                         seed=seed, num_process=num_process)
+                                          seed=seed, num_process=num_process)
 
     results = [[generation, *scores[i], *population[i]] for i in range(size_of_population * 2)]
-    results.sort(key=lambda tup:tup[1], reverse=True)
+    results.sort(key=lambda tup:tup[2], reverse=True)
 
     path = 'raw_data/{}_{}'.format(opponent.name, seed)
-    os.mkdir(path)
-    with open("{}/main.csv".format(path), "a") as data_file:
+    if not os.path.exists(path):
+        os.mkdir(path)
+    with open("{}/main.csv".format(path), "w") as data_file:
         data_writer = csv.writer(data_file)
         data_writer.writerow(headers)
         for row in results:
             data_writer.writerow(row)
-        print('|Finish Generation 0|')
 
+        pbar = tqdm.tqdm(total=number_of_generations)
         while generation < number_of_generations:
             generation += 1
             indices_to_keep = [results[i][1] for i in range(bottleneck)]
-            population = subset_population(population, indices_to_keep)
+            new_population = subset_population(population, indices_to_keep)
+            population = new_population
 
             while len(population) < 2 * size_of_population:
                 i, j  = [random.randint(0, bottleneck) for _ in range(2)]
@@ -64,9 +69,11 @@ def evolve(opponent, number_of_generations, bottleneck, mutation_probability,
                                                   num_process=num_process)
 
             results = [[generation, *scores[i], *population[i]] for i in range(size_of_population * 2)]
-            results.sort(key=lambda tup:tup[1], reverse=True)
+            results.sort(key=lambda tup:tup[2], reverse=True)
             for row in results:
                 data_writer.writerow(row)
-            print('|Finish Generation {}|'.format(generation))
-            
-# TODO: List from indices in list
+            pbar.update(1)
+        pbar.close()
+    print('|Final Generation| Best Fitness: {}| Best Gene: {}'.format(results[0][2],
+                                                                      results[0][3:]))
+    return results[0][2], results[0][3:]
