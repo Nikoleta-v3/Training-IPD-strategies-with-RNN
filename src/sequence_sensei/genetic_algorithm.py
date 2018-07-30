@@ -37,7 +37,7 @@ def evolve(opponent, number_of_generations, bottleneck, mutation_probability,
     population = ss.get_initial_population(size_of_population=size_of_population,
                                            sequence_length=sequence_length)
     scores = ss.get_fitness_of_population(population=population, opponent=opponent,
-                                          seed=seed, num_process=num_process)
+                                          seed=seed, turns=sequence_length, num_process=num_process)
 
     results = [[generation, *scores[i], *population[i]] for i in range(size_of_population * 2)]
     results.sort(key=lambda tup:tup[2], reverse=True)
@@ -66,6 +66,7 @@ def evolve(opponent, number_of_generations, bottleneck, mutation_probability,
 
             scores = ss.get_fitness_of_population(population=population,
                                                   opponent=opponent, seed=seed,
+                                                  turns=sequence_length,
                                                   num_process=num_process)
 
             results = [[generation, *scores[i], *population[i]] for i in range(size_of_population * 2)]

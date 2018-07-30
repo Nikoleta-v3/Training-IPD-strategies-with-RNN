@@ -20,7 +20,7 @@ def get_sequence_str(sequence):
     return string_sequence
 
 @dask.delayed
-def get_fitness_of_individual(sequence, opponent, seed, index, turns=205):
+def get_fitness_of_individual(sequence, opponent, seed, index, turns):
     """
     Returns the score of a sequence against a given opponent and the index
     of the sequence in the population.
@@ -35,7 +35,7 @@ def get_fitness_of_individual(sequence, opponent, seed, index, turns=205):
 
     return index, match.final_score_per_turn()[-1]
 
-def get_fitness_of_population(population, opponent, seed, num_process=1):
+def get_fitness_of_population(population, opponent, turns, seed=np.NaN, num_process=1):
     """
     Returns the scores of a population of sequences alongside their indices.
     Uses the library dask to paralilise the process.
@@ -43,6 +43,7 @@ def get_fitness_of_population(population, opponent, seed, num_process=1):
     index_scores = []
     for index, individual in enumerate(population):
         index_scores.append(get_fitness_of_individual(individual, opponent, seed=seed,
+                                                      turns=turns,
                                                       index=index))
 
     with dask.config.set(pool=ThreadPool(num_process)):
