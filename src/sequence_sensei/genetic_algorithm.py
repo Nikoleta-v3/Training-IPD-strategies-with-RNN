@@ -6,6 +6,7 @@ import os
 import random
 
 import tqdm
+import numpy as np
 
 import sequence_sensei as ss
 
@@ -28,7 +29,7 @@ def subset_population(population, indices):
     return subset
 
 def evolve(opponent, number_of_generations, bottleneck, mutation_probability,
-           sequence_length, half_size_of_population, seed, num_process=1):
+           sequence_length, half_size_of_population, seed=np.NaN, num_process=1):
 
     headers = ['opponent', 'seed', 'num. of generations', 'bottleneck', 'mutation probability',
                'half size population', 'generation', 'index', 'score']
@@ -48,9 +49,15 @@ def evolve(opponent, number_of_generations, bottleneck, mutation_probability,
     path = 'raw_data/{}_{}'.format(opponent.name, seed)
     if not os.path.exists(path):
         os.mkdir(path)
-    with open("{}/main.csv".format(path), "w") as data_file:
+    filename = "{}/main.csv".format(path)
+    if os.path.exists(filename):
+        append_write = 'a'
+    else:
+        append_write = 'w'
+    with open(filename, append_write) as data_file:
         data_writer = csv.writer(data_file)
-        data_writer.writerow(headers)
+        if append_write == 'w':
+            data_writer.writerow(headers)
         for row in results:
             data_writer.writerow(row)
 
