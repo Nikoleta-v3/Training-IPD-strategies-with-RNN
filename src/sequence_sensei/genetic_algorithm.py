@@ -30,7 +30,8 @@ def subset_population(population, indices):
 def evolve(opponent, number_of_generations, bottleneck, mutation_probability,
            sequence_length, half_size_of_population, seed, num_process=1):
 
-    headers = ['generation', 'index', 'score']
+    headers = ['opponent', 'seed', 'num. of generations', 'bottleneck', 'mutation probability',
+               'half size population', 'generation', 'index', 'score']
     headers += ['gene_{}'.format(i) for i in range(sequence_length)]
 
     generation = 0
@@ -39,8 +40,10 @@ def evolve(opponent, number_of_generations, bottleneck, mutation_probability,
     scores = ss.get_fitness_of_population(population=population, opponent=opponent,
                                           seed=seed, turns=sequence_length, num_process=num_process)
 
-    results = [[generation, *scores[i], *population[i]] for i in range(half_size_of_population * 2)]
-    results.sort(key=lambda tup:tup[2], reverse=True)
+    results =[[opponent.name, seed, number_of_generations, bottleneck, mutation_probability,
+               half_size_of_population, generation, *scores[i], *population[i]]
+              for i in range(half_size_of_population * 2)]
+    results.sort(key=lambda tup:tup[8], reverse=True)
 
     path = 'raw_data/{}_{}'.format(opponent.name, seed)
     if not os.path.exists(path):
@@ -54,7 +57,7 @@ def evolve(opponent, number_of_generations, bottleneck, mutation_probability,
         pbar = tqdm.tqdm(total=number_of_generations)
         while generation < number_of_generations:
             generation += 1
-            indices_to_keep = [results[i][1] for i in range(bottleneck)]
+            indices_to_keep = [results[i][7] for i in range(bottleneck)]
             new_population = subset_population(population, indices_to_keep)
             population = new_population
 
@@ -69,12 +72,14 @@ def evolve(opponent, number_of_generations, bottleneck, mutation_probability,
                                                   turns=sequence_length,
                                                   num_process=num_process)
 
-            results = [[generation, *scores[i], *population[i]] for i in range(half_size_of_population * 2)]
-            results.sort(key=lambda tup:tup[2], reverse=True)
+            results =[[opponent.name, seed, number_of_generations, bottleneck, mutation_probability,
+                    half_size_of_population, generation, *scores[i], *population[i]]
+                    for i in range(half_size_of_population * 2)]
+            results.sort(key=lambda tup:tup[8], reverse=True)
             for row in results:
                 data_writer.writerow(row)
             pbar.update(1)
         pbar.close()
-    print('|Final Generation| Best Fitness: {}| Best Gene: {}'.format(results[0][2],
-                                                                      results[0][3:]))
-    return results[0][2], results[0][3:]
+    print('|Final Generation| Best Fitness: {}| Best Gene: {}'.format(results[0][8],
+                                                                      results[0][9:]))
+    return results[0][8], results[0][9:]

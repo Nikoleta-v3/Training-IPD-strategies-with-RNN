@@ -42,12 +42,19 @@ def test_evolve():
                                      seed=seed)
 
     result = pd.read_csv('raw_data/Cooperator_nan/main.csv')
-    assert list(result.columns) == ['generation', 'index', 'score', 'gene_0',
-                                    'gene_1', 'gene_2', 'gene_3', 'gene_4',
-                                    'gene_5', 'gene_6', 'gene_7', 'gene_8',
-                                    'gene_9']
+    assert list(result.columns) == ['opponent', 'seed', 'num. of generations', 'bottleneck',
+                                    'mutation probability', 'half size population',
+                                    'generation', 'index', 'score', 'gene_0', 'gene_1',
+                                    'gene_2', 'gene_3', 'gene_4', 'gene_5', 'gene_6',
+                                    'gene_7', 'gene_8', 'gene_9']
     assert list(result['generation'].unique()) == [0, 1, 2, 3, 4, 5]
     assert score == 5.0
     assert best_sequence == [0 for _ in range(sequence_length)]
+
+    assert list(result['opponent'].unique())[0] == 'Cooperator'
+    assert int(result['num. of generations'].unique()[0]) == 5
+    assert int(result['bottleneck'].unique()[0]) == 10
+    assert float(result['mutation probability'].unique()[0]) == 0.1
+    assert int(result['half size population'].unique()[0]) == 10
 
     shutil.rmtree('raw_data/Cooperator_nan')
