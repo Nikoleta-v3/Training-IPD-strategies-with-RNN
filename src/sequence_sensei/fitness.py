@@ -31,7 +31,7 @@ def get_fitness_of_individual(sequence, opponent, seed, index, turns):
     opponent = opponent()
     player = axl.Cycler(get_sequence_str(sequence))
     match = axl.Match([opponent, player], turns=turns)
-    _ = match.play()
+    match.play()
 
     return index, match.final_score_per_turn()[-1]
 
