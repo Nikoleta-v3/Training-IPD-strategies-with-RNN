@@ -28,18 +28,18 @@ def subset_population(population, indices):
     return subset
 
 def evolve(opponent, number_of_generations, bottleneck, mutation_probability,
-           sequence_length, size_of_population, seed, num_process=1):
+           sequence_length, half_size_of_population, seed, num_process=1):
 
     headers = ['generation', 'index', 'score']
     headers += ['gene_{}'.format(i) for i in range(sequence_length)]
 
     generation = 0
-    population = ss.get_initial_population(size_of_population=size_of_population,
+    population = ss.get_initial_population(half_size_of_population=half_size_of_population,
                                            sequence_length=sequence_length)
     scores = ss.get_fitness_of_population(population=population, opponent=opponent,
                                           seed=seed, turns=sequence_length, num_process=num_process)
 
-    results = [[generation, *scores[i], *population[i]] for i in range(size_of_population * 2)]
+    results = [[generation, *scores[i], *population[i]] for i in range(half_size_of_population * 2)]
     results.sort(key=lambda tup:tup[2], reverse=True)
 
     path = 'raw_data/{}_{}'.format(opponent.name, seed)
@@ -58,7 +58,7 @@ def evolve(opponent, number_of_generations, bottleneck, mutation_probability,
             new_population = subset_population(population, indices_to_keep)
             population = new_population
 
-            while len(population) < 2 * size_of_population:
+            while len(population) < 2 * half_size_of_population:
                 i, j  = [random.randint(0, bottleneck - 1) for _ in range(2)]
                 new_individual = crossover(population[i], population[j])
                 new_individual = [mutation(gene, mutation_probability) for gene in new_individual]
@@ -69,7 +69,7 @@ def evolve(opponent, number_of_generations, bottleneck, mutation_probability,
                                                   turns=sequence_length,
                                                   num_process=num_process)
 
-            results = [[generation, *scores[i], *population[i]] for i in range(size_of_population * 2)]
+            results = [[generation, *scores[i], *population[i]] for i in range(half_size_of_population * 2)]
             results.sort(key=lambda tup:tup[2], reverse=True)
             for row in results:
                 data_writer.writerow(row)

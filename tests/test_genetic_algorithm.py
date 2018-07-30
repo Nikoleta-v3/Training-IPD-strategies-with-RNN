@@ -30,7 +30,7 @@ def test_evolve():
     bottleneck = 10
     mutation_probability = 0.1
     sequence_length = 10
-    size_of_population = 10
+    half_size_of_population = 10
     seed = np.NaN
 
     score, best_sequence = ss.evolve(opponent=player,
@@ -38,7 +38,7 @@ def test_evolve():
                                      bottleneck=bottleneck,
                                      mutation_probability=mutation_probability,
                                      sequence_length=sequence_length,
-                                     size_of_population=size_of_population,
+                                     half_size_of_population=half_size_of_population,
                                      seed=seed)
 
     result = pd.read_csv('raw_data/Cooperator_nan/main.csv')

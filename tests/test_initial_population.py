@@ -2,9 +2,9 @@ import sequence_sensei as ss
 import random
 
 def test_initial_population():
-    size_of_population = 20
+    half_size_of_population = 20
     sequence_length = 20
-    initial_population = ss.get_initial_population(size_of_population, sequence_length=sequence_length)
+    initial_population = ss.get_initial_population(half_size_of_population, sequence_length=sequence_length)
 
     assert len(initial_population) == 40
 
