@@ -46,6 +46,5 @@ def get_fitness_of_population(population, opponent, turns, seed=np.NaN, num_proc
                                                       turns=turns,
                                                       index=index))
 
-    with dask.config.set(pool=ThreadPool(num_process)):
-        result = dask.compute(*index_scores)
+    result = dask.compute(*index_scores, num_workers=num_process)
     return list(result)
