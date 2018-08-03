@@ -79,8 +79,8 @@ def evolve(opponent, number_of_generations, bottleneck, mutation_probability,
                                                   turns=sequence_length,
                                                   num_process=num_process)
 
-            results =[[opponent.name, seed, number_of_generations, bottleneck, mutation_probability,
-                    half_size_of_population, generation, *scores[i], *population[i]]
+            results = [[opponent.name, seed, number_of_generations, bottleneck, mutation_probability,
+                        half_size_of_population, generation, *scores[i], *population[i]]
                     for i in range(half_size_of_population * 2)]
             results.sort(key=lambda tup:tup[8], reverse=True)
             for row in results:
