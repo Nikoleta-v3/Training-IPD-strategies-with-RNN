@@ -8,6 +8,7 @@ import dask
 
 from multiprocessing.pool import ThreadPool
 
+
 def get_sequence_str(sequence):
     """
     Takes a list of axl.Actions, C and D, and returns a list of characters, 'C'
@@ -18,6 +19,7 @@ def get_sequence_str(sequence):
         string_sequence += str(action)
 
     return string_sequence
+
 
 @dask.delayed
 def get_fitness_of_individual(sequence, opponent, seed, index, turns):
@@ -35,16 +37,21 @@ def get_fitness_of_individual(sequence, opponent, seed, index, turns):
 
     return index, match.final_score_per_turn()[-1]
 
-def get_fitness_of_population(population, opponent, turns, seed=np.NaN, num_process=1):
+
+def get_fitness_of_population(
+    population, opponent, turns, seed=np.NaN, num_process=1
+):
     """
     Returns the scores of a population of sequences alongside their indices.
     Uses the library dask to paralilise the process.
     """
     index_scores = []
     for index, individual in enumerate(population):
-        index_scores.append(get_fitness_of_individual(individual, opponent, seed=seed,
-                                                      turns=turns,
-                                                      index=index))
+        index_scores.append(
+            get_fitness_of_individual(
+                individual, opponent, seed=seed, turns=turns, index=index
+            )
+        )
 
     result = dask.compute(*index_scores, num_workers=num_process)
     return list(result)
