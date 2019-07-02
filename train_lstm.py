@@ -1,9 +1,10 @@
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 
-import tensorflow as tf
 import keras
+import matplotlib.pyplot as plt
+import pandas as pd
+import tensorflow as tf
+from keras import backend
 from keras.layers import LSTM, Dense, Dropout, TimeDistributed
 from keras.models import Sequential
 from sklearn.model_selection import train_test_split
@@ -27,13 +28,19 @@ def get_batch(X, Y, sequence_len=205):
 
 if __name__ == "__main__":
 
-    num_epochs = 100
-    num_hidden_cells = 100
+    num_epochs = 1000
+    num_hidden_cells = 200
     drop_out_rate = 0.2
-    num_cores = 4
+    num_cores = 10
 
-    config = tf.ConfigProto(device_count={"CPU": num_cores})
-    keras.backend.tensorflow_backend.set_session(tf.Session(config=config))
+    session_conf = tf.ConfigProto(
+        intra_op_parallelism_threads=num_cores,
+        inter_op_parallelism_threads=num_cores,
+    )
+
+    tf.set_random_seed(0)
+    session = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+    keras.backend.set_session(session)
 
     targets = pd.read_csv("targets.csv", index_col=0)
     targets = targets.drop(columns=["index", "opponent"])
@@ -66,8 +73,8 @@ if __name__ == "__main__":
         validation_steps=len(X_test) * 204 // len(X_test),
     )
 
-    model.save("lstm_model.h5")
-    model.save_weights("lstm_model_weights.h5")
+    model.save("output/lstm_model.h5")
+    model.save_weights("output/lstm_model_weights.h5")
 
     # Accuracy plot
     fig, ax = plt.subplots()
@@ -78,7 +85,7 @@ if __name__ == "__main__":
     plt.plot(history.history["val_acc"], label=" validation accuracy")
 
     plt.legend()
-    plt.savefig("accuracy_plot.pdf")
+    plt.savefig("output/accuracy_plot.pdf")
 
     # Loss plot
     fig, ax = plt.subplots()
@@ -87,4 +94,4 @@ if __name__ == "__main__":
     plt.plot(history.history["val_loss"], label=" validation loss")
 
     plt.legend()
-    plt.savefig("loss_plot.pdf")
+    plt.savefig("output/loss_plot.pdf")
