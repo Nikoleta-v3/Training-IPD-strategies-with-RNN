@@ -10,26 +10,54 @@ from keras.models import Sequential
 from sklearn.model_selection import train_test_split
 
 
-def get_batch(X, Y, sequence_len=205):
+def batch_generator(input_path, output_path, bs=2470):
     while True:
-        for max_length in range(1, sequence_len):
-            inputs, outputs = [], []
-            n_sequences = len(X)
-            for n in range(n_sequences):
-                x = np.array(X.iloc[n].values[:max_length])
-                x = x.reshape((max_length, 1))
+        skip = []
+        for iterations in range(0, 204):
+            print(iterations)
+            if iterations > 0:
+                skip += [
+                    x for x in range((iterations - 1) * bs, bs * iterations)
+                ]
+            batch = pd.read_csv(
+                input_path, nrows=bs, skiprows=skip, index_col=0
+            ).values
 
-                y = Y.iloc[n].values[:max_length]
-                y = y.reshape((max_length, 1))
+            output_batch = pd.read_csv(
+                output_path, nrows=bs, skiprows=skip, index_col=0
+            ).values
 
-                inputs.append(x), outputs.append(y)
-            yield np.array(inputs), np.array(outputs)
+            batch = np.array(
+                [
+                    [x for x in mini_batch if np.isnan(x) == False]
+                    for mini_batch in batch
+                ]
+            )
+            output_batch = np.array(
+                [
+                    [x for x in mini_batch if np.isnan(x) == False]
+                    for mini_batch in output_batch
+                ]
+            )
+
+            try:
+                batch = batch.reshape((batch.shape[0], batch.shape[1], 1))
+                output_batch = output_batch.reshape(
+                    (output_batch.shape[0], output_batch.shape[1], 1)
+                )
+            except IndexError:
+                batch = batch.reshape((batch.shape[0], 1, 1))
+                output_batch = output_batch.reshape(
+                    (output_batch.shape[0], 1, 1)
+                )
+
+            yield (batch, output_batch)
 
 
 if __name__ == "__main__":
 
-    num_epochs = 1000
-    num_hidden_cells = 200
+    num_epochs = 500
+    num_hidden_cells = 100
     drop_out_rate = 0.2
     num_cores = 10
 
@@ -42,15 +70,6 @@ if __name__ == "__main__":
     session = tf.Session(graph=tf.get_default_graph(), config=session_conf)
     keras.backend.set_session(session)
 
-    targets = pd.read_csv("targets.csv", index_col=0)
-    targets = targets.drop(columns=["index", "opponent"])
-
-    sequences = pd.read_csv("sequences.csv", index_col=0)
-
-    X_train, X_test, y_train, Y_test = train_test_split(
-        sequences, targets, test_size=0.33, random_state=13
-    )
-
     model = Sequential()
 
     model.add(
@@ -59,18 +78,24 @@ if __name__ == "__main__":
 
     model.add(Dropout(rate=drop_out_rate))
 
-    model.add(TimeDistributed(Dense(1, activation="sigmoid")))
+    model.add(Dense(1, activation="sigmoid"))
 
     model.compile(
         loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
     )
 
+    trainGen = batch_generator("inputs_train.csv", "outputs_train.csv")
+    testGen = batch_generator("inputs_test.csv", "outputs_test.csv", bs=1218)
+
     history = model.fit_generator(
-        get_batch(X_train, y_train),
-        steps_per_epoch=len(X_train) * 204 // len(X_train),
-        epochs=100,
-        validation_data=get_batch(X_test, Y_test),
-        validation_steps=len(X_test) * 204 // len(X_test),
+        trainGen,
+        steps_per_epoch=204,
+        epochs=num_epochs,
+        verbose=2,
+        validation_data=testGen,
+        validation_steps=204,
+        use_multiprocessing=True,
+        workers=num_cores,
     )
 
     model.save("output/lstm_model.h5")
