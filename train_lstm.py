@@ -14,7 +14,6 @@ def batch_generator(input_path, output_path, bs=2470):
     while True:
         skip = []
         for iterations in range(0, 204):
-            print(iterations)
             if iterations > 0:
                 skip += [
                     x for x in range((iterations - 1) * bs, bs * iterations)
@@ -50,7 +49,8 @@ def batch_generator(input_path, output_path, bs=2470):
                 output_batch = output_batch.reshape(
                     (output_batch.shape[0], 1, 1)
                 )
-
+            if iterations == bs:
+                print(iterations)
             yield (batch, output_batch)
 
 
@@ -91,7 +91,7 @@ if __name__ == "__main__":
         trainGen,
         steps_per_epoch=204,
         epochs=num_epochs,
-        verbose=2,
+        verbose=1,
         validation_data=testGen,
         validation_steps=204,
         use_multiprocessing=True,
