@@ -99,8 +99,6 @@ if __name__ == "__main__":
         verbose=1,
         validation_data=testGen,
         validation_steps=num_of_steps,
-        use_multiprocessing=True,
-        workers=num_cores,
     )
 
     model.save("output/lstm_model.h5")
