@@ -10,10 +10,12 @@ from keras.models import Sequential
 from sklearn.model_selection import train_test_split
 
 
-def batch_generator(input_path, output_path, bs=2470):
+def batch_generator(input_path, output_path, bs=2470, num_of_steps=202):
+
     while True:
+        print("start_while_loop")
         skip = []
-        for iterations in range(0, 204):
+        for iterations in range(0, 202):
             if iterations > 0:
                 skip += [
                     x for x in range((iterations - 1) * bs, bs * iterations)
@@ -49,8 +51,10 @@ def batch_generator(input_path, output_path, bs=2470):
                 output_batch = output_batch.reshape(
                     (output_batch.shape[0], 1, 1)
                 )
-            if iterations == bs:
-                print(iterations)
+
+            if iterations == 201:
+                skip = []
+
             yield (batch, output_batch)
 
 
@@ -60,6 +64,7 @@ if __name__ == "__main__":
     num_hidden_cells = 100
     drop_out_rate = 0.2
     num_cores = 10
+    num_of_steps = 202
 
     session_conf = tf.ConfigProto(
         intra_op_parallelism_threads=num_cores,
@@ -89,11 +94,11 @@ if __name__ == "__main__":
 
     history = model.fit_generator(
         trainGen,
-        steps_per_epoch=204,
+        steps_per_epoch=num_of_steps,
         epochs=num_epochs,
         verbose=1,
         validation_data=testGen,
-        validation_steps=204,
+        validation_steps=num_of_steps,
         use_multiprocessing=True,
         workers=num_cores,
     )
