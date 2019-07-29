@@ -1,3 +1,6 @@
+import os.path
+import sys
+
 import numpy as np
 
 import keras
@@ -5,15 +8,14 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import tensorflow as tf
 from keras import backend
-from keras.layers import LSTM, Dense, Dropout, TimeDistributed
-from keras.models import Sequential
+from keras.callbacks import ModelCheckpoint
+from keras.layers import LSTM, Dense, Dropout, TimeDistributed, CuDNNLSTM
+from keras.models import Sequential, load_model
 from sklearn.model_selection import train_test_split
 
 
 def batch_generator(input_path, output_path, bs=2470, num_of_steps=202):
-
     while True:
-        print("start_while_loop")
         skip = []
         for iterations in range(0, 202):
             if iterations > 0:
@@ -60,11 +62,16 @@ def batch_generator(input_path, output_path, bs=2470, num_of_steps=202):
 
 if __name__ == "__main__":
 
-    num_epochs = 500
-    num_hidden_cells = 100
+    num_epochs = 150
+    num_hidden_cells = 200
     drop_out_rate = 0.2
     num_cores = 10
     num_of_steps = 202
+
+    run_count_filename = 'count_run.txt'
+    file_name = "output/weights.best.hdf5"
+    with open(run_count_filename, 'r') as textfile:
+        run = int(textfile.read().split('= ')[-1])
 
     session_conf = tf.ConfigProto(
         intra_op_parallelism_threads=num_cores,
@@ -75,19 +82,26 @@ if __name__ == "__main__":
     session = tf.Session(graph=tf.get_default_graph(), config=session_conf)
     keras.backend.set_session(session)
 
-    model = Sequential()
+    if os.path.isfile(file_name):
+        model = load_model(file_name)
+    else:
+        model = Sequential()
 
-    model.add(
-        LSTM(num_hidden_cells, return_sequences=True, input_shape=(None, 1))
+        model.add(
+            CuDNNLSTM(num_hidden_cells, return_sequences=True, input_shape=(None, 1))
+        )
+
+        model.add(Dropout(rate=drop_out_rate))
+
+        model.add(Dense(1, activation="sigmoid"))
+        model.compile(
+            loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
+        )
+
+    checkpoint = ModelCheckpoint(
+        file_name, monitor='loss', verbose=1, save_best_only=True, mode="max"
     )
-
-    model.add(Dropout(rate=drop_out_rate))
-
-    model.add(Dense(1, activation="sigmoid"))
-
-    model.compile(
-        loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
-    )
+    callbacks_list = [checkpoint]
 
     trainGen = batch_generator("inputs_train.csv", "outputs_train.csv")
     testGen = batch_generator("inputs_test.csv", "outputs_test.csv", bs=1218)
@@ -99,10 +113,8 @@ if __name__ == "__main__":
         verbose=1,
         validation_data=testGen,
         validation_steps=num_of_steps,
+        callbacks=callbacks_list,
     )
-
-    model.save("output/lstm_model.h5")
-    model.save_weights("output/lstm_model_weights.h5")
 
     # Accuracy plot
     fig, ax = plt.subplots()
@@ -113,7 +125,7 @@ if __name__ == "__main__":
     plt.plot(history.history["val_acc"], label=" validation accuracy")
 
     plt.legend()
-    plt.savefig("output/accuracy_plot.pdf")
+    plt.savefig("output/accuracy_plot_%s.pdf" % run)
 
     # Loss plot
     fig, ax = plt.subplots()
@@ -122,4 +134,7 @@ if __name__ == "__main__":
     plt.plot(history.history["val_loss"], label=" validation loss")
 
     plt.legend()
-    plt.savefig("output/loss_plot.pdf")
+    plt.savefig("output/loss_plot_run_%s.pdf" % run)
+
+    with open(run_count_filename, 'w') as textfile:
+        textfile.write('run_number = %s' % (run + 1))
