@@ -62,6 +62,7 @@ def batch_generator(input_path, output_path, bs=2470, num_of_steps=202):
 
 if __name__ == "__main__":
 
+    number_of_layers = int(sys.argv[1])
     num_epochs = 150
     num_hidden_cells = 200
     drop_out_rate = 0.2
@@ -87,11 +88,12 @@ if __name__ == "__main__":
     else:
         model = Sequential()
 
-        model.add(
-            CuDNNLSTM(num_hidden_cells, return_sequences=True, input_shape=(None, 1))
-        )
+        for _ in range(number_of_layers):
+            model.add(
+                CuDNNLSTM(num_hidden_cells, return_sequences=True, input_shape=(None, 1))
+            )
 
-        model.add(Dropout(rate=drop_out_rate))
+            model.add(Dropout(rate=drop_out_rate))
 
         model.add(Dense(1, activation="sigmoid"))
         model.compile(
@@ -116,25 +118,10 @@ if __name__ == "__main__":
         callbacks=callbacks_list,
     )
 
-    # Accuracy plot
-    fig, ax = plt.subplots()
+    # Export Evaluation Measuress
+    writing_label = "%s_%s_%s" % (num_hidden_cells, run, number_of_layers)
+    measures = ['acc', 'val_acc', 'loss', 'val_loss']
 
-    plt.plot(
-        history.history["acc"], label="accuracy", color="red", linestyle="--"
-    )
-    plt.plot(history.history["val_acc"], label=" validation accuracy")
-
-    plt.legend()
-    plt.savefig("output/accuracy_plot_%s.pdf" % run)
-
-    # Loss plot
-    fig, ax = plt.subplots()
-
-    plt.plot(history.history["loss"], label="loss", color="red", linestyle="--")
-    plt.plot(history.history["val_loss"], label=" validation loss")
-
-    plt.legend()
-    plt.savefig("output/loss_plot_run_%s.pdf" % run)
-
-    with open(run_count_filename, 'w') as textfile:
-        textfile.write('run_number = %s' % (run + 1))
+    data = list(zip(*[history.history[measure] for measure in measures]))
+    df = pd.DataFrame(data, columns=measures)
+    df.to_csv('output/validation_measures_run_%s.csv' % writing_label)
