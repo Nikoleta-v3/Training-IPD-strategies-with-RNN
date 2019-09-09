@@ -77,25 +77,12 @@ if __name__ == "__main__":
     )
 
     writing_label = "%s_%s_%s" % (num_hidden_layers, batch_size, num_of_epochs)
-    model.save("experiments/lstm_model_%s.h5" % writing_label)
-    model.save_weights("experiments/lstm_model_weights_%s.h5" % writing_label)
+    model.save("output/lstm_model_%s.h5" % writing_label)
+    model.save_weights("output/lstm_model_weights_%s.h5" % writing_label)
 
-    # Accuracy plot
-    fig, ax = plt.subplots()
+    # Export evaluation measures
+    measures = ['acc', 'val_acc', 'loss', 'val_loss']
 
-    plt.plot(
-        history.history["acc"], label="accuracy", color="red", linestyle="--"
-    )
-    plt.plot(history.history["val_acc"], label=" validation accuracy")
-
-    plt.legend()
-    plt.savefig("experiments/accuracy_plot_%s.pdf" % writing_label)
-
-    # Loss plot
-    fig, ax = plt.subplots()
-
-    plt.plot(history.history["loss"], label="loss", color="red", linestyle="--")
-    plt.plot(history.history["val_loss"], label=" validation loss")
-
-    plt.legend()
-    plt.savefig("experiments/loss_plot_%s.pdf" % writing_label)
+    data = list(zip(*[history.history[measure] for measure in measures]))
+    df = pd.DataFrame(data, columns=measures)
+    df.to_csv('output/validation_measures_%s.csv' % writing_label)

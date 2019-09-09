@@ -2,10 +2,9 @@ name: rnn
 channels:
   - defaults
 dependencies:
-  - python=3.6.6
+  - python=3.5.0
   - dask==0.18.1
   - ipython==5.0.0
-  -jupyter-console==5.2.0
   - jupyter==1.0.0
   - numpy==1.14.5
   - pandas==0.23.3
@@ -15,6 +14,6 @@ dependencies:
       - axelrod==4.2.0
       - tensorflow==1.14.0
       - keras==2.2.4
-      - sklearn==0.21.2
+      - sklearn==0.21.3
 prefix: /home/nightwing/anaconda3/envs/rnn
 
