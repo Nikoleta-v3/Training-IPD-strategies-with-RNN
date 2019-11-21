@@ -8,3 +8,8 @@ src/sequence_sensei.egg-info/
 .ipynb_checkpoints/
 raw_data/
 
+*.aux
+*.bbl
+*.blg
+*.out
+*.log
