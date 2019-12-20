@@ -56,14 +56,18 @@ if __name__ == "__main__":
         LSTM(
             num_hidden_layers,
             return_sequences=True,
-            input_shape=(X_train.shape[1], X_train.shape[2]),
+            input_shape=(None, X_train.shape[2]),
         )
     )
     model.add(Dropout(rate=0.3))
     model.add(Dense(1, activation="sigmoid"))
 
+    adam = keras.optimizers.Adam(
+        lr=0.0005, beta_1=0.9, beta_2=0.999, amsgrad=False
+    )
+
     model.compile(
-        loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
+        loss="binary_crossentropy", optimizer=adam, metrics=["accuracy"]
     )
 
     history = model.fit(
@@ -81,8 +85,8 @@ if __name__ == "__main__":
     model.save_weights("output/lstm_model_weights_%s.h5" % writing_label)
 
     # Export evaluation measures
-    measures = ['acc', 'val_acc', 'loss', 'val_loss']
+    measures = ["acc", "val_acc", "loss", "val_loss"]
 
     data = list(zip(*[history.history[measure] for measure in measures]))
     df = pd.DataFrame(data, columns=measures)
-    df.to_csv('output/validation_measures_%s.csv' % writing_label)
+    df.to_csv("output/validation_measures_%s.csv" % writing_label)

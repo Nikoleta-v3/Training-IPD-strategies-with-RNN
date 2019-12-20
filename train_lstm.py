@@ -63,45 +63,63 @@ def batch_generator(input_path, output_path, bs=2470, num_of_steps=202):
 if __name__ == "__main__":
 
     number_of_layers = int(sys.argv[1])
+    experiment = sys.argv[2]
+
     num_epochs = 150
     num_hidden_cells = 200
     drop_out_rate = 0.2
     num_cores = 10
     num_of_steps = 202
 
-    run_count_filename = 'count_run.txt'
-    file_name = "output/weights.best.hdf5"
-    with open(run_count_filename, 'r') as textfile:
-        run = int(textfile.read().split('= ')[-1])
+    run_count_filename = "count_run.tex"
+    folder_name = f'output_{experiment}'
+    file_name = f"{folder_name}/weights.best.hdf5"
+
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+        run = 1
+        with open(f'{folder_name}/{run_count_filename}', 'w') as textfile:
+            textfile.write(f'{run}')
+    else:
+        with open(f'{folder_name}/{run_count_filename}', 'r') as textfile:
+            run = int(textfile.read()) + 1
+        with open(f'{folder_name}/{run_count_filename}', 'w') as textfile:
+            textfile.write(f'{run}')
 
     session_conf = tf.ConfigProto(
         intra_op_parallelism_threads=num_cores,
         inter_op_parallelism_threads=num_cores,
     )
 
-    tf.set_random_seed(0)
     session = tf.Session(graph=tf.get_default_graph(), config=session_conf)
     keras.backend.set_session(session)
 
-    if os.path.isfile(file_name):
-        model = load_model(file_name)
-    else:
-        model = Sequential()
+    model = Sequential()
 
-        for _ in range(number_of_layers):
-            model.add(
-                CuDNNLSTM(num_hidden_cells, return_sequences=True, input_shape=(None, 1))
-            )
-
-            model.add(Dropout(rate=drop_out_rate))
-
-        model.add(Dense(1, activation="sigmoid"))
-        model.compile(
-            loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
+    for _ in range(number_of_layers):
+        model.add(
+            LSTM(num_hidden_cells, return_sequences=True, input_shape=(None, 1))
         )
 
+        model.add(Dropout(rate=drop_out_rate))
+
+    model.add(Dense(1, activation="sigmoid"))
+    if os.path.isfile(file_name):
+        model.load_weights("weights.best.hdf5")
+
+    adam = keras.optimizers.Adam(
+        lr=0.0005, beta_1=0.9, beta_2=0.999, amsgrad=False
+    )
+
+    model.compile(
+        loss="binary_crossentropy", optimizer=adam, metrics=["accuracy"]
+    )
+
     checkpoint = ModelCheckpoint(
-        file_name, monitor='loss', verbose=1, save_best_only=True, mode="max"
+        file_name, monitor='val_accuracy',
+        verbose=1, save_best_only=True,
+        mode='max',
+        save_weights_only=True
     )
     callbacks_list = [checkpoint]
 
@@ -119,9 +137,9 @@ if __name__ == "__main__":
     )
 
     # Export Evaluation Measuress
-    writing_label = "%s_%s_%s" % (num_hidden_cells, run, number_of_layers)
+    writing_label = f"{num_hidden_cells}_{run}_{number_of_layers}"
     measures = ['acc', 'val_acc', 'loss', 'val_loss']
 
     data = list(zip(*[history.history[measure] for measure in measures]))
     df = pd.DataFrame(data, columns=measures)
-    df.to_csv('output/validation_measures_run_%s.csv' % writing_label)
+    df.to_csv(f'{folder_name}/validation_measures_run_{writing_label}.csv')
