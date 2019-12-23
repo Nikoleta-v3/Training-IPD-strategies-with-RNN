@@ -72,19 +72,19 @@ if __name__ == "__main__":
     num_of_steps = 202
 
     run_count_filename = "count_run.tex"
-    folder_name = f'output_{experiment}'
+    folder_name = f"output_{experiment}"
     file_name = f"{folder_name}/weights.best.hdf5"
 
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
         run = 1
-        with open(f'{folder_name}/{run_count_filename}', 'w') as textfile:
-            textfile.write(f'{run}')
+        with open(f"{folder_name}/{run_count_filename}", "w") as textfile:
+            textfile.write(f"{run}")
     else:
-        with open(f'{folder_name}/{run_count_filename}', 'r') as textfile:
+        with open(f"{folder_name}/{run_count_filename}", "r") as textfile:
             run = int(textfile.read()) + 1
-        with open(f'{folder_name}/{run_count_filename}', 'w') as textfile:
-            textfile.write(f'{run}')
+        with open(f"{folder_name}/{run_count_filename}", "w") as textfile:
+            textfile.write(f"{run}")
 
     session_conf = tf.ConfigProto(
         intra_op_parallelism_threads=num_cores,
@@ -98,7 +98,9 @@ if __name__ == "__main__":
 
     for _ in range(number_of_layers):
         model.add(
-            LSTM(num_hidden_cells, return_sequences=True, input_shape=(None, 1))
+            CuDNNLSTM(
+                num_hidden_cells, return_sequences=True, input_shape=(None, 1)
+            )
         )
 
         model.add(Dropout(rate=drop_out_rate))
@@ -116,10 +118,12 @@ if __name__ == "__main__":
     )
 
     checkpoint = ModelCheckpoint(
-        file_name, monitor='val_accuracy',
-        verbose=1, save_best_only=True,
-        mode='max',
-        save_weights_only=True
+        file_name,
+        monitor="val_accuracy",
+        verbose=1,
+        save_best_only=True,
+        mode="max",
+        save_weights_only=True,
     )
     callbacks_list = [checkpoint]
 
@@ -138,8 +142,8 @@ if __name__ == "__main__":
 
     # Export Evaluation Measuress
     writing_label = f"{num_hidden_cells}_{run}_{number_of_layers}"
-    measures = ['acc', 'val_acc', 'loss', 'val_loss']
+    measures = ["acc", "val_acc", "loss", "val_loss"]
 
     data = list(zip(*[history.history[measure] for measure in measures]))
     df = pd.DataFrame(data, columns=measures)
-    df.to_csv(f'{folder_name}/validation_measures_run_{writing_label}.csv')
+    df.to_csv(f"{folder_name}/validation_measures_run_{writing_label}.csv")

@@ -1,4 +1,5 @@
 import sys
+import os
 
 import numpy as np
 
@@ -36,15 +37,21 @@ if __name__ == "__main__":
     num_hidden_layers = int(sys.argv[1])
     batch_size = int(sys.argv[2])
     num_of_epochs = int(sys.argv[3])
+    experiment = sys.argv[4]
 
+    num_cells = 200
     num_cores = 1
+    drop_out_rate = 0.2
+    folder_name = f"output_{experiment}"
+
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
 
     session_conf = tf.ConfigProto(
         intra_op_parallelism_threads=num_cores,
         inter_op_parallelism_threads=num_cores,
     )
 
-    tf.set_random_seed(0)
     session = tf.Session(graph=tf.get_default_graph(), config=session_conf)
     keras.backend.set_session(session)
 
@@ -52,14 +59,16 @@ if __name__ == "__main__":
 
     model = Sequential()
 
-    model.add(
-        LSTM(
-            num_hidden_layers,
-            return_sequences=True,
-            input_shape=(None, X_train.shape[2]),
+    for _ in range(num_hidden_layers):
+        model.add(
+            LSTM(
+                num_cells,
+                return_sequences=True,
+                input_shape=(None, X_train.shape[2]),
+            )
         )
-    )
-    model.add(Dropout(rate=0.3))
+
+        model.add(Dropout(rate=drop_out_rate))
     model.add(Dense(1, activation="sigmoid"))
 
     adam = keras.optimizers.Adam(
@@ -81,12 +90,12 @@ if __name__ == "__main__":
     )
 
     writing_label = "%s_%s_%s" % (num_hidden_layers, batch_size, num_of_epochs)
-    model.save("output/lstm_model_%s.h5" % writing_label)
-    model.save_weights("output/lstm_model_weights_%s.h5" % writing_label)
+    model.save(f"{folder_name}/lstm_model_{writing_label}.h5")
+    model.save_weights(f"{folder_name}/lstm_model_weights_{writing_label}.h5")
 
     # Export evaluation measures
     measures = ["acc", "val_acc", "loss", "val_loss"]
 
     data = list(zip(*[history.history[measure] for measure in measures]))
     df = pd.DataFrame(data, columns=measures)
-    df.to_csv("output/validation_measures_%s.csv" % writing_label)
+    df.to_csv(f"{folder_name}/validation_measures_{writing_label}.csv")
