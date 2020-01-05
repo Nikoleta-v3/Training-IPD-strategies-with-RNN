@@ -1,0 +1,40 @@
+\documentclass{standalone}
+
+\usepackage{tikz}
+\usepackage{standalone}
+
+\usetikzlibrary{arrows,positioning, decorations.pathreplacing, calc, backgrounds}
+\tikzset{
+    ncbar angle/.initial=90,
+    ncbar/.style={
+        to path=(\tikztostart)
+        -- ($(\tikztostart)!#1!\pgfkeysvalueof{/tikz/ncbar angle}:(\tikztotarget)$)
+        -- ($(\tikztotarget)!($(\tikztostart)!#1!\pgfkeysvalueof{/tikz/ncbar angle}:(\tikztotarget)$)!\pgfkeysvalueof{/tikz/ncbar angle}:(\tikztostart)$)
+        -- (\tikztotarget)
+    },
+    ncbar/.default=0.5cm,
+}
+\tikzset{square left brace/.style={ncbar=0.5cm}}
+\tikzset{square right brace/.style={ncbar=-0.5cm}}
+
+\begin{document}
+    \begin{tikzpicture}
+        % \node (n) at (0, 0) {\footnotesize \(N=10\)};
+        \node[rectangle, fill=gray!20, rounded corners] (initial_pop) at (0, -2.5) {\begin{tabular}{cccccccccc}
+            \multicolumn{1}{c|}{\(C\)} & \(D\) & \(D\) & \multicolumn{1}{c:}{\(D\)} & \(D\) & \(D\) & \multicolumn{1}{c:}{\(D\)} & \(D\) & \(D\) & \multicolumn{1}{c:}{\(D\)} \\
+            \multicolumn{1}{c|}{\(D\)} & \(C\) & \(C\) & \multicolumn{1}{c:}{\(C\)} & \(C\) & \(C\) & \multicolumn{1}{c:}{\(C\)} & \(C\) & \(C\) & \multicolumn{1}{c:}{\(C\)} \\
+            \multicolumn{1}{c:}{\(C\)} & \(C\) & \(C\) & \multicolumn{1}{c|}{\(C\)} & \(D\) & \(D\) & \multicolumn{1}{c:}{\(D\)} & \(D\) & \(D\) & \multicolumn{1}{c:}{\(D\)} \\
+            \multicolumn{1}{c:}{\(D\)} & \(D\) & \(D\) & \multicolumn{1}{c|}{\(D\)} & \(C\) & \(C\) & \multicolumn{1}{c:}{\(C\)} & \(C\) & \(C\) & \multicolumn{1}{c:}{\(C\)} \\
+            \multicolumn{1}{c:}{\(C\)} & \(C\) & \(C\) & \multicolumn{1}{c:}{\(C\)} & \(C\) & \(C\) & \multicolumn{1}{c|}{\(C\)} & \(D\) & \(D\) & \multicolumn{1}{c:}{\(D\)} \\
+            \multicolumn{1}{c:}{\(D\)} & \(D\) & \(D\) & \multicolumn{1}{c:}{\(D\)} & \(D\) & \(D\) & \multicolumn{1}{c|}{\(D\)} & \(C\) & \(C\) & \multicolumn{1}{c:}{\(C\)} \\
+            \multicolumn{1}{c:}{\(C\)} & \(C\) & \(C\) & \multicolumn{1}{c:}{\(C\)} & \(C\) & \(C\) & \multicolumn{1}{c:}{\(C\)} & \(C\) & \(C\) & \multicolumn{1}{c|}{\(C\)} \\
+            \multicolumn{1}{c:}{\(D\)} & \(D\) & \(D\) & \multicolumn{1}{c:}{\(D\)} & \(D\) & \(D\) & \multicolumn{1}{c:}{\(D\)} & \(D\) & \(D\) & \multicolumn{1}{c|}{\(D\)} \\
+            \end{tabular}
+         };
+        %  \draw [black, thick] ($(initial_pop)+(-2.7, -2.1)$) to [square left brace ] ($(initial_pop)+(-2.7, 2.1)$);
+        %  \draw [black, thick] ($(initial_pop)+(2.7, -2.1)$) to [square right brace] ($(initial_pop)+(2.7, 2.1)$);
+        % \draw [decorate, line width=1pt, decoration={brace, amplitude=10pt, }, xshift=-4pt,yshift=0pt]
+        % (-3.6, -4.4) -- (-3.6, -.6) node [black, midway, xshift=-0.6cm, rotate=90]
+        % {\footnotesize \(s=8\)};
+    \end{tikzpicture}
+\end{document}
