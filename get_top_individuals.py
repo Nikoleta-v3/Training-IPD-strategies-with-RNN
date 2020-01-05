@@ -8,11 +8,16 @@ if __name__ == "__main__":
     location = sys.argv[1]
     start = int(sys.argv[2])
 
+    exclude = [
+        "/Volumes/ext/Data/raw_data/$\\phi$_nan",
+        "/Volumes/ext/Data/raw_data/$\\pi$_nan",
+    ]
+
     last_generation = 2000
     groupbys = ["opponent"] + ["gene_{}".format(i) for i in range(205)]
 
     for i, path in enumerate(tqdm.tqdm(Path(location).glob("*"))):
-        if i >= start:
+        if i >= start and path not in exclude:
             strategy = str(path).split("/")[-1]
 
             df = dd.read_csv("%s/main.csv" % path)

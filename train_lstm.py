@@ -9,39 +9,30 @@ import pandas as pd
 import tensorflow as tf
 from keras import backend
 from keras.callbacks import ModelCheckpoint
-from keras.layers import LSTM, Dense, Dropout, TimeDistributed, CuDNNLSTM
+from keras.layers import (
+    LSTM,
+    Dense,
+    Dropout,
+    TimeDistributed,
+    CuDNNLSTM,
+    Bidirectional,
+)
 from keras.models import Sequential, load_model
 from sklearn.model_selection import train_test_split
 
 
-def batch_generator(input_path, output_path, bs=2470, num_of_steps=202):
+def batch_generator(inputs, outputs):
     while True:
-        skip = []
-        for iterations in range(0, 202):
-            if iterations > 0:
-                skip += [
-                    x for x in range((iterations - 1) * bs, bs * iterations)
-                ]
-            batch = pd.read_csv(
-                input_path, nrows=bs, skiprows=skip, index_col=0
-            ).values
+        for size in range(1, 205):
+            batches = [
+                (sequence, target)
+                for sequence, target in zip(inputs, outputs)
+                if len(sequence) == size
+            ]
 
-            output_batch = pd.read_csv(
-                output_path, nrows=bs, skiprows=skip, index_col=0
-            ).values
-
-            batch = np.array(
-                [
-                    [x for x in mini_batch if np.isnan(x) == False]
-                    for mini_batch in batch
-                ]
-            )
-            output_batch = np.array(
-                [
-                    [x for x in mini_batch if np.isnan(x) == False]
-                    for mini_batch in output_batch
-                ]
-            )
+            x, y = zip(*batches)
+            batch = np.array(x)
+            output_batch = np.array(y)
 
             try:
                 batch = batch.reshape((batch.shape[0], batch.shape[1], 1))
@@ -54,26 +45,46 @@ def batch_generator(input_path, output_path, bs=2470, num_of_steps=202):
                     (output_batch.shape[0], 1, 1)
                 )
 
-            if iterations == 201:
-                skip = []
+            yield batch, output_batch
 
-            yield (batch, output_batch)
 
+def format_sequences_to_input(sequences):
+    inputs = sequences.drop(columns=["opponent", "gene_204"]).values
+    max_length = len(inputs[0])
+
+    prep_X_train = []
+    for histories in range(1, max_length + 1):
+        for sequence in inputs:
+            assert len(sequence) == max_length
+            prep_X_train.append(sequence[:histories])
+
+    return np.array(prep_X_train)
+
+
+def format_sequences_to_output(sequences):
+    inputs = sequences.drop(columns=["opponent", "gene_0"]).values
+    max_length = len(inputs[0])
+
+    prep_y_train = []
+    for histories in range(1, max_length + 1):
+        for sequence in inputs:
+            assert len(sequence) == max_length
+            prep_y_train.append(sequence[:histories])
+
+    return np.array(prep_y_train)
 
 if __name__ == "__main__":
 
-    number_of_layers = int(sys.argv[1])
-    experiment = sys.argv[2]
+    experiment = sys.argv[1]
 
-    num_epochs = 150
-    num_hidden_cells = 200
+    number_of_epochs = 1000
+    num_hidden_cells = 100
     drop_out_rate = 0.2
-    num_cores = 10
-    num_of_steps = 202
+    num_of_steps = 205
 
     run_count_filename = "count_run.tex"
     folder_name = f"output_{experiment}"
-    file_name = f"{folder_name}/weights.best.hdf5"
+    file_name = f"{folder_name}/weights-over-time.h5"
 
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
@@ -86,62 +97,58 @@ if __name__ == "__main__":
         with open(f"{folder_name}/{run_count_filename}", "w") as textfile:
             textfile.write(f"{run}")
 
-    session_conf = tf.ConfigProto(
-        intra_op_parallelism_threads=num_cores,
-        inter_op_parallelism_threads=num_cores,
+    outputs = pd.read_csv("targets.csv", index_col=0)
+    y = format_sequences_to_output(outputs)
+    sequences = pd.read_csv("sequences.csv", index_col=0)
+    inputs = format_sequences_to_input(sequences)
+    input_train, input_test, output_train, output_test = train_test_split(
+        inputs, y, test_size=0.2, random_state=0
     )
 
-    session = tf.Session(graph=tf.get_default_graph(), config=session_conf)
-    keras.backend.set_session(session)
+    trainGen = batch_generator(input_train, output_train)
+    testGen = batch_generator(input_test, output_test)
 
     model = Sequential()
 
-    for _ in range(number_of_layers):
-        model.add(
+    model.add(
             CuDNNLSTM(
                 num_hidden_cells, return_sequences=True, input_shape=(None, 1)
             )
         )
 
-        model.add(Dropout(rate=drop_out_rate))
+    model.add(Dropout(rate=drop_out_rate))
 
     model.add(Dense(1, activation="sigmoid"))
-    if os.path.isfile(file_name):
-        model.load_weights("weights.best.hdf5")
 
-    adam = keras.optimizers.Adam(
-        lr=0.0005, beta_1=0.9, beta_2=0.999, amsgrad=False
-    )
+    if os.path.exists(file_name):
+        model.load_weights(file_name)
 
     model.compile(
-        loss="binary_crossentropy", optimizer=adam, metrics=["accuracy"]
+        loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
     )
 
     checkpoint = ModelCheckpoint(
         file_name,
-        monitor="val_accuracy",
         verbose=1,
-        save_best_only=True,
-        mode="max",
+        monitor="val_loss",
         save_weights_only=True,
+        mode="auto",
     )
-    callbacks_list = [checkpoint]
-
-    trainGen = batch_generator("inputs_train.csv", "outputs_train.csv")
-    testGen = batch_generator("inputs_test.csv", "outputs_test.csv", bs=1218)
 
     history = model.fit_generator(
         trainGen,
-        steps_per_epoch=num_of_steps,
-        epochs=num_epochs,
+        steps_per_epoch=204,
+        epochs=number_of_epochs,
         verbose=1,
         validation_data=testGen,
-        validation_steps=num_of_steps,
-        callbacks=callbacks_list,
+        validation_steps=204,
+        callbacks=[checkpoint],
     )
 
+    model.save(f"{folder_name}/final_lstm_model_{run}.h5")
+
     # Export Evaluation Measuress
-    writing_label = f"{num_hidden_cells}_{run}_{number_of_layers}"
+    writing_label = f"{num_hidden_cells}_{run}"
     measures = ["acc", "val_acc", "loss", "val_loss"]
 
     data = list(zip(*[history.history[measure] for measure in measures]))
