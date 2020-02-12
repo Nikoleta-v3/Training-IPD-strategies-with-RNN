@@ -1,6 +1,6 @@
 .pytest_cache/
 src/sequence_sensei/__pycache__/
-tests/__pycache__/
+*__pycache__/
 *output
 best_responses/
 data/
@@ -17,3 +17,7 @@ raw_data/
 *.blg
 *.out
 *.log
+
+basic/*
+top_twenty/*
+*output*

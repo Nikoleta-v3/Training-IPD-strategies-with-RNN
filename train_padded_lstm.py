@@ -4,6 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 import keras
 from keras.callbacks import ModelCheckpoint
@@ -43,11 +44,21 @@ if __name__ == "__main__":
     outputs = pd.read_csv("classification_output.csv", index_col=0)
 
     X = inputs.values
-    y = outputs.values
+    y = outputs["target"].values
+
+    data = list(zip(X, y))
+    train, test = train_test_split(data, test_size=0.2)
+    X_train, y_train = list(zip(*train))
+    X_test, y_test = list(zip(*test))
+
+    y_train = np.array(y_train)
+    y_test = np.array(y_test)
+    X_train = np.array(X_train)
+    X_test = np.array(X_test)
 
     max_length = len(X[0])
-    batch_size = 64
-    number_of_epochs = 500
+    batch_size = 128
+    number_of_epochs = 100
 
     num_cells = 100
     drop_out_rate = 0.2
@@ -60,7 +71,7 @@ if __name__ == "__main__":
     model.add(
         Embedding(top_words, embedding_vector_length, input_length=max_length)
     )
-    model.add(Bidirectional(CuDNNLSTM(num_cells)))
+    model.add(CuDNNLSTM(num_cells))
 
     model.add(Dropout(rate=drop_out_rate))
     model.add(Dense(1, activation="sigmoid"))
@@ -81,10 +92,10 @@ if __name__ == "__main__":
     )
 
     history = model.fit(
-        X,
-        y,
+        X_train,
+        y_train,
+        validation_data=(X_test, y_test),
         epochs=number_of_epochs,
-        validation_split=0.2,
         verbose=3,
         batch_size=batch_size,
         callbacks=[checkpoint],
@@ -96,4 +107,4 @@ if __name__ == "__main__":
 
     data = list(zip(*[history.history[measure] for measure in measures]))
     df = pd.DataFrame(data, columns=measures)
-    df.to_csv(f"{folder_name}/validation_measures_{batch_size}.csv")
+    df.to_csv(f"{folder_name}/validation_measures_{batch_size}_{run}.csv")

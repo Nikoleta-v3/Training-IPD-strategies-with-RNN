@@ -36,14 +36,10 @@ def batch_generator(inputs, outputs):
 
             try:
                 batch = batch.reshape((batch.shape[0], batch.shape[1], 1))
-                output_batch = output_batch.reshape(
-                    (output_batch.shape[0], output_batch.shape[1], 1)
-                )
+                output_batch = output_batch.reshape((output_batch.shape[0], 1))
             except IndexError:
                 batch = batch.reshape((batch.shape[0], 1, 1))
-                output_batch = output_batch.reshape(
-                    (output_batch.shape[0], 1, 1)
-                )
+                output_batch = output_batch.reshape((output_batch.shape[0], 1))
 
             yield batch, output_batch
 
@@ -69,7 +65,7 @@ def format_sequences_to_output(sequences):
     for histories in range(1, max_length + 1):
         for sequence in inputs:
             assert len(sequence) == max_length
-            prep_y_train.append(sequence[:histories])
+            prep_y_train.append(sequence[histories - 1])
 
     return np.array(prep_y_train)
 
@@ -114,14 +110,13 @@ if __name__ == "__main__":
     model = Sequential()
 
     model.add(
-        CuDNNLSTM(
-            num_hidden_cells, return_sequences=True, input_shape=(None, 1)
-        )
+        CuDNNLSTM(num_hidden_cells, return_sequences=True, input_shape=(None, 1))
     )
 
+    model.add(CuDNNLSTM(num_hidden_cells))
     model.add(Dropout(rate=drop_out_rate))
 
-    model.add(Dense(1, activation="sigmoid"))
+    model.add((Dense(1, activation="sigmoid")))
 
     if os.path.exists(file_name):
         model.load_weights(file_name)
