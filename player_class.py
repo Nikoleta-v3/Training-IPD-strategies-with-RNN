@@ -10,7 +10,7 @@ class LSTMPlayer(axl.Player):
     name = "The LSTM homie"
     classifier = {
         "memory_depth": float("inf"),
-        "stochastic": False,
+        "stochastic": True,
         "inspects_source": False,
         "manipulates_source": False,
         "manipulates_state": False,
@@ -21,18 +21,18 @@ class LSTMPlayer(axl.Player):
         self.opening_probability = opening_probability
         self.reshape_history_function = reshape_history_funct
         super().__init__()
+        if opening_probability in [0, 1]:
+            self.classifier["stochastic"] = False
 
     def strategy(self, opponent):
         if len(self.history) == 0:
             return random_choice(self.opening_probability)
 
-        current_length = len(opponent.history)
         history = [action.value for action in opponent.history]
+        prediction = float(
+            self.model.predict(self.reshape_history_function(history))[0][-1])
 
-        prediction = self.model.predict(self.reshape_history_function(history))
-        prediction = prediction.reshape(1, current_length)
-
-        return axl.Action(round(prediction[-1][0]))
+        return axl.Action(round(prediction))
 
     def __repr__(self):
         return self.name
