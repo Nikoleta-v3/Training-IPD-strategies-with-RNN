@@ -46,7 +46,7 @@ def reshape_history_lstm_model(history):
     return np.array(history).reshape(1, len(history), 1)
 
 
-def read_model_lstm(filename, num_hidden_cells=100, drop_out_rate=0.2):
+def read_model_sequence_to_sequence(filename, num_hidden_cells=100, drop_out_rate=0.2):
     model = Sequential()
     model.add(
         LSTM(num_hidden_cells, return_sequences=True, input_shape=(None, 1))
@@ -58,7 +58,7 @@ def read_model_lstm(filename, num_hidden_cells=100, drop_out_rate=0.2):
     return model
 
 
-def read_model_lstm_unknown_length(
+def read_model_classification(
     filename, num_hidden_cells=100, drop_out_rate=0.2
 ):
     model = Sequential()

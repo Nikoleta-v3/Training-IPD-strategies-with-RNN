@@ -60,20 +60,20 @@ def test_reshape_history():
         1,
     )
 
-def test_read_model_lstm():
+def test_read_model_sequence_to_sequence():
     filename = "hawk_output/output_lstm_model_basic/weights-over-time.h5"
 
-    model = player_class.read_model_lstm(filename)
+    model = player_class.read_model_sequence_to_sequence(filename)
 
     assert type(model) == Sequential
     assert len(model.layers) == 3
     assert type(model.layers[0]) == LSTM
     assert type(model.layers[1]) == Dropout
 
-def test_read_model_lstm_unknown_length():
+def test_read_model_classification():
     filename = "hawk_output/output_lstm_unknown_model_basic/weights-over-time.h5"
 
-    model = player_class.read_model_lstm_unknown_length(filename)
+    model = player_class.read_model_classification(filename)
 
     assert type(model) == Sequential
     assert len(model.layers) == 4
