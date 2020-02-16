@@ -18,6 +18,7 @@ if __name__ == "__main__":
         2
     ]
     model_type = sys.argv[3]
+    num_processes = int(sys.argv[4])
 
     folder_name = "meta_tournament_results"
     if not os.path.exists(folder_name):
@@ -53,7 +54,7 @@ if __name__ == "__main__":
         tournaments = axl.Tournament(
             players, turns=turns, repetitions=repetitions
         )
-        results = tournaments.play()
+        results = tournaments.play(processes=num_processes)
 
         df = pd.DataFrame(results.summarise())
         df["turns"] = turns
