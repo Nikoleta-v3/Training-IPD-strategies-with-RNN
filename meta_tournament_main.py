@@ -14,6 +14,10 @@ player_class = imp.load_source("player_class", "player_class.py")
 if __name__ == "__main__":
 
     max_seed = int(sys.argv[1])
+    filename = sys.argv[
+        2
+    ]
+    model_type = sys.argv[3]
 
     folder_name = "meta_tournament_results"
     if not os.path.exists(folder_name):
@@ -22,11 +26,12 @@ if __name__ == "__main__":
     min_size = 5
     max_size = 10
     turns = 205
-    repetitions = 5
+    repetitions = 50
 
-    model = player_class.read_in_model_lstm_unknown_length(
-        "hawk_output/output_lstm_unknown_model/weights-over-time.h5"
-    )
+    if model_type == "sequence":
+        model = player_class.read_model_sequence_to_sequence(filename)
+    if model_type == "classification":
+        model = player_class.read_model_classification(filename)
 
     for seed in range(max_seed):
 
@@ -36,7 +41,10 @@ if __name__ == "__main__":
 
         axl.seed(seed)
         size = random.randint(min_size, max_size)
-        strategies = random.sample(axl.strategies, size)
+        to_compete = list(
+            set(axl.strategies) - set(axl.long_run_time_strategies)
+        )
+        strategies = random.sample(to_compete, size)
 
         players = [s() for s in strategies] + [player]
         turns = turns
@@ -53,9 +61,10 @@ if __name__ == "__main__":
 
         df["eigenjesus"] = results.eigenjesus_rating
         df["eigenmoses"] = results.eigenmoses_rating
+        df["good_partner_rating"] = results.good_partner_rating
         df["initial_cooperation_rate"] = results.initial_cooperation_rate
         df["median_vengeful_cooperation"] = np.median(
             [cooperation for cooperation in results.vengeful_cooperation]
         )
 
-        df.to_csv(f"meta_tournament_results/result_summary_seed_{seed}.csv")
+        df.to_csv(f"meta_tournament_results/result_summary_{model_type}_seed_{seed}.csv")
