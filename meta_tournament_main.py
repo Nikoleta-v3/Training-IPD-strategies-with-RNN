@@ -14,11 +14,11 @@ player_class = imp.load_source("player_class", "player_class.py")
 if __name__ == "__main__":
 
     max_seed = int(sys.argv[1])
+    min_seed = int(sys.argv[2])
     filename = sys.argv[
-        2
+        3
     ]
-    model_type = sys.argv[3]
-    num_processes = int(sys.argv[4])
+    model_type = sys.argv[4]
 
     folder_name = "meta_tournament_results"
     if not os.path.exists(folder_name):
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     if model_type == "classification":
         model = player_class.read_model_classification(filename)
 
-    for seed in range(max_seed):
+    for seed in range(min_seed, max_seed):
 
         player = player_class.LSTMPlayer(
             model, player_class.reshape_history_lstm_model
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         tournaments = axl.Tournament(
             players, turns=turns, repetitions=repetitions
         )
-        results = tournaments.play(processes=num_processes)
+        results = tournaments.play()
 
         df = pd.DataFrame(results.summarise())
         df["turns"] = turns
