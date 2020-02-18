@@ -15,9 +15,7 @@ if __name__ == "__main__":
 
     max_seed = int(sys.argv[1])
     min_seed = int(sys.argv[2])
-    filename = sys.argv[
-        3
-    ]
+    filename = sys.argv[3]
     model_type = sys.argv[4]
 
     folder_name = "meta_tournament_results"
@@ -36,10 +34,6 @@ if __name__ == "__main__":
 
     for seed in range(min_seed, max_seed):
 
-        player = player_class.LSTMPlayer(
-            model, player_class.reshape_history_lstm_model
-        )
-
         axl.seed(seed)
         size = random.randint(min_size, max_size)
         to_compete = list(
@@ -47,25 +41,45 @@ if __name__ == "__main__":
         )
         strategies = random.sample(to_compete, size)
 
-        players = [s() for s in strategies] + [player]
-        turns = turns
-        repetitions = repetitions
+        for opening_probability in [0, 1, 0.78]:
 
-        tournaments = axl.Tournament(
-            players, turns=turns, repetitions=repetitions
-        )
-        results = tournaments.play()
+            player = player_class.LSTMPlayer(
+                model,
+                player_class.reshape_history_lstm_model,
+                opening_probability,
+            )
 
-        df = pd.DataFrame(results.summarise())
-        df["turns"] = turns
-        df["repetitions"] = repetitions
+            players = [s() for s in strategies] + [player]
 
-        df["eigenjesus"] = results.eigenjesus_rating
-        df["eigenmoses"] = results.eigenmoses_rating
-        df["good_partner_rating"] = results.good_partner_rating
-        df["initial_cooperation_rate"] = results.initial_cooperation_rate
-        df["median_vengeful_cooperation"] = np.median(
-            [cooperation for cooperation in results.vengeful_cooperation]
-        )
+            tournaments = axl.Tournament(
+                players, turns=turns, repetitions=repetitions
+            )
+            results = tournaments.play()
 
-        df.to_csv(f"meta_tournament_results/result_summary_{model_type}_seed_{seed}.csv")
+            df = pd.DataFrame(results.summarise())
+            df["turns"] = turns
+            df["repetitions"] = repetitions
+            df["size"] = size
+            df["seed"] = seed
+
+            df["eigenjesus"] = results.eigenjesus_rating
+            df["eigenmoses"] = results.eigenmoses_rating
+            df["good_partner_rating"] = results.good_partner_rating
+            df["initial_cooperation_rate"] = results.initial_cooperation_rate
+            df["median_vengeful_cooperation"] = np.median(
+                [cooperation for cooperation in results.vengeful_cooperation]
+            )
+
+            df.to_csv(
+                f"meta_tournament_results/result_summary_{model_type}_seed_{seed}_opening_{opening_probability}.csv"
+            )
+
+            payoff_matrix = np.array(results.payoff_matrix)
+            strategies_names = [str(player) for player in players]
+            df_payoff_matrix = pd.DataFrame(
+                payoff_matrix, columns=strategies_names, index=strategies_names
+            )
+
+            df_payoff_matrix.to_csv(
+                f"meta_tournament_results/payoff_matrix_{model_type}_seed_{seed}_opening_{opening_probability}.csv"
+            )
