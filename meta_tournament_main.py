@@ -3,6 +3,7 @@ import os
 import random
 import sys
 
+import dask
 import numpy as np
 import pandas as pd
 
@@ -17,14 +18,15 @@ if __name__ == "__main__":
     min_seed = int(sys.argv[2])
     filename = sys.argv[3]
     model_type = sys.argv[4]
+    data_type = sys.argv[5]
 
-    folder_name = "meta_tournament_results"
+    folder_name = f"meta_tournament_results_{data_type}"
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
 
     min_size = 5
     max_size = 10
-    turns = 205
+    turns = 200
     repetitions = 50
 
     if model_type == "sequence":
@@ -36,8 +38,9 @@ if __name__ == "__main__":
 
         axl.seed(seed)
         size = random.randint(min_size, max_size)
-        to_compete = list(
-            set(axl.strategies) - set(axl.long_run_time_strategies)
+        to_compete = sorted(
+            list(set(axl.strategies) - set(axl.long_run_time_strategies)),
+            key=lambda x: x.name,
         )
         strategies = random.sample(to_compete, size)
 
@@ -51,10 +54,12 @@ if __name__ == "__main__":
 
             players = [s() for s in strategies] + [player]
 
-            tournaments = axl.Tournament(
+            tournament = axl.Tournament(
                 players, turns=turns, repetitions=repetitions
             )
-            results = tournaments.play()
+            run = dask.delayed(tournament.play)()
+
+            results = dask.compute(run, num_workers=1)
 
             df = pd.DataFrame(results.summarise())
             df["turns"] = turns
@@ -71,7 +76,7 @@ if __name__ == "__main__":
             )
 
             df.to_csv(
-                f"meta_tournament_results/result_summary_{model_type}_seed_{seed}_opening_{opening_probability}.csv"
+                f"{folder_name}/result_summary_{model_type}_seed_{seed}_opening_{opening_probability}.csv"
             )
 
             payoff_matrix = np.array(results.payoff_matrix)
@@ -81,5 +86,5 @@ if __name__ == "__main__":
             )
 
             df_payoff_matrix.to_csv(
-                f"meta_tournament_results/payoff_matrix_{model_type}_seed_{seed}_opening_{opening_probability}.csv"
+                f"{folder_name}/payoff_matrix_{model_type}_seed_{seed}_opening_{opening_probability}.csv"
             )
