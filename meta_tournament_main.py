@@ -14,11 +14,10 @@ player_class = imp.load_source("player_class", "player_class.py")
 
 if __name__ == "__main__":
 
-    max_seed = int(sys.argv[1])
-    min_seed = int(sys.argv[2])
-    filename = sys.argv[3]
-    model_type = sys.argv[4]
-    data_type = sys.argv[5]
+    seed_index = int(sys.argv[1])
+    filename = sys.argv[2]
+    model_type = sys.argv[3]
+    data_type = sys.argv[4]
 
     folder_name = f"meta_tournament_results_{data_type}"
     if not os.path.exists(folder_name):
@@ -34,7 +33,7 @@ if __name__ == "__main__":
     if model_type == "classification":
         model = player_class.read_model_classification(filename)
 
-    for seed in range(min_seed, max_seed):
+    for seed in range((seed_index - 1) * 10, seed_index * 10):
 
         axl.seed(seed)
         size = random.randint(min_size, max_size)
