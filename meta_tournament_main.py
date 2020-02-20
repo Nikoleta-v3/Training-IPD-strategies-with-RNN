@@ -3,7 +3,6 @@ import os
 import random
 import sys
 
-import dask
 import numpy as np
 import pandas as pd
 
@@ -33,7 +32,7 @@ if __name__ == "__main__":
     if model_type == "classification":
         model = player_class.read_model_classification(filename)
 
-    for seed in range((seed_index - 1) * 10, seed_index * 10):
+    for seed in range((seed_index - 1) * 10, 2):
 
         axl.seed(seed)
         size = random.randint(min_size, max_size)
@@ -56,11 +55,9 @@ if __name__ == "__main__":
             tournament = axl.Tournament(
                 players, turns=turns, repetitions=repetitions
             )
-            run = dask.delayed(tournament.play)()
+            result = tournament.play()
 
-            results = dask.compute(run, num_workers=1)
-
-            df = pd.DataFrame(results.summarise())
+            df = pd.DataFrame(result.summarise())
             df["turns"] = turns
             df["repetitions"] = repetitions
             df["size"] = size
