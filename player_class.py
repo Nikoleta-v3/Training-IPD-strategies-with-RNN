@@ -47,6 +47,7 @@ def reshape_history_lstm_model(history):
 
 
 def read_model_sequence_to_sequence(filename, num_hidden_cells=100, drop_out_rate=0.2):
+    global model
     model = Sequential()
     model.add(
         LSTM(num_hidden_cells, return_sequences=True, input_shape=(None, 1))
@@ -54,13 +55,14 @@ def read_model_sequence_to_sequence(filename, num_hidden_cells=100, drop_out_rat
     model.add(Dropout(rate=drop_out_rate))
     model.add(Dense(1, activation="sigmoid"))
     model.load_weights(filename)
-
+    model._make_predict_function()
     return model
 
 
 def read_model_classification(
     filename, num_hidden_cells=100, drop_out_rate=0.2
 ):
+    global model
     model = Sequential()
     model.add(
         LSTM(num_hidden_cells, return_sequences=True, input_shape=(None, 1))
@@ -69,5 +71,5 @@ def read_model_classification(
     model.add(Dropout(rate=drop_out_rate))
     model.add((Dense(1, activation="sigmoid")))
     model.load_weights(filename)
-
+    model._make_predict_function()
     return model
